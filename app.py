@@ -12,7 +12,7 @@ st.title("📈 YouTube Subscriber Growth Predictor")
 st.markdown("Predict future subscriber growth using a Logistic Growth Model.")
 
 # ----------------------------
-# Logistic Formula Section
+# Logistic Formula
 # ----------------------------
 st.subheader("📘 Logistic Growth Model")
 
@@ -36,7 +36,7 @@ st.sidebar.header("🔧 Input Parameters")
 st.sidebar.info("""
 Suggested:
 - Initial Subscribers: 100 – 10,000  
-- Max Audience (K): 10,000 – 10,000,000  
+- Max Audience: 10,000 – 10,00,000+  
 - Growth Rate: 0.01 – 1.0  
 """)
 
@@ -48,6 +48,7 @@ months = st.sidebar.slider("Prediction Duration (Months)", 1, 120, 36)
 target = st.sidebar.number_input("🎯 Target Subscribers", value=50000)
 
 viral = st.sidebar.checkbox("🚀 Enable Viral Growth Spike")
+compare = st.sidebar.checkbox("📊 Compare with Faster Growth Scenario")
 
 # ----------------------------
 # Logistic Function
@@ -56,12 +57,18 @@ def logistic_growth(t, S0, K, r):
     return K / (1 + ((K - S0) / S0) * np.exp(-r * t))
 
 t = np.arange(0, months + 1)
+
+# Base Prediction
 subscribers = logistic_growth(t, S0, K, r)
 
 # Viral Effect
 if viral:
     noise = np.random.normal(0, 0.05*K, len(subscribers))
     subscribers = np.clip(subscribers + noise, 0, None)
+
+# Comparison Scenario
+if compare:
+    subscribers_fast = logistic_growth(t, S0, K, r * 1.5)
 
 # DataFrame
 df = pd.DataFrame({
@@ -76,7 +83,10 @@ st.subheader("📊 Growth Prediction Chart")
 
 fig, ax = plt.subplots(figsize=(10,5))
 
-ax.plot(df["Month"], df["Predicted Subscribers"], linewidth=3, label="Predicted Growth")
+ax.plot(df["Month"], df["Predicted Subscribers"], linewidth=3, label="Normal Growth")
+
+if compare:
+    ax.plot(t, subscribers_fast, linestyle='dashed', label="Faster Growth Scenario")
 
 # Growth phases
 ax.axvspan(0, months*0.3, alpha=0.1, label="Slow Growth")
@@ -87,13 +97,6 @@ ax.axvspan(months*0.7, months, alpha=0.1, label="Saturation")
 milestones = [1000, 10000, 100000, 1000000, 10000000]
 for m in milestones:
     ax.axhline(y=m, linestyle='--')
-
-# CSV Upload for real data
-uploaded_file = st.file_uploader("Upload past subscriber data (CSV)", type=["csv"])
-
-if uploaded_file:
-    real_df = pd.read_csv(uploaded_file)
-    ax.plot(real_df["Month"], real_df["Subscribers"], linestyle='dashed', label="Actual Data")
 
 ax.set_xlabel("Months")
 ax.set_ylabel("Subscribers")
@@ -114,7 +117,7 @@ else:
     st.warning("Target not reached in selected duration.")
 
 # ----------------------------
-# Milestones Table
+# Milestone Table
 # ----------------------------
 st.subheader("🏆 Milestone Achievement")
 
@@ -131,7 +134,7 @@ milestone_df = pd.DataFrame(milestone_data, columns=["Milestone Subscribers", "M
 st.table(milestone_df)
 
 # ----------------------------
-# Monthly Growth Chart
+# Monthly Growth
 # ----------------------------
 st.subheader("📉 Monthly Growth Trend")
 
@@ -157,10 +160,10 @@ col2.metric("Total Growth %", f"{growth_percent:.2f}%")
 st.subheader("⚠️ Model Limitations")
 
 st.markdown("""
-- Assumes smooth growth (real YouTube growth may have spikes)  
+- Assumes smooth growth (real YouTube growth may fluctuate)  
 - Does not include algorithm changes  
-- Ignores content quality and engagement factors  
-- Viral growth is simulated randomly  
+- Ignores content quality & engagement  
+- Viral growth is simulated  
 """)
 
 st.success("✅ Prediction Complete! Try different scenarios using sidebar.")
